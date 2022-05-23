@@ -1,0 +1,11 @@
+// Init database table
+go run main.go db create
+
+// Migration database data
+go run main.go db migrate
+
+// Generate swagger & run go server
+swag init -o ./swg && go run main.go server
+
+// Genna generate model
+./genna model-named -o $HOME/development/go/inventory -f -k -g 9 -p model -c postgres://jihanlugas:12345678@localhost:5432/inventory

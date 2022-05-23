@@ -1,0 +1,151 @@
+definitions:
+  controller.signinReq:
+    properties:
+      passwd:
+        maxLength: 200
+        type: string
+      username:
+        maxLength: 20
+        type: string
+    required:
+    - passwd
+    - username
+    type: object
+  controller.signupReq:
+    properties:
+      confirmPasswd:
+        maxLength: 200
+        type: string
+      email:
+        maxLength: 200
+        type: string
+      fullname:
+        maxLength: 80
+        type: string
+      noHp:
+        maxLength: 20
+        type: string
+      passwd:
+        maxLength: 200
+        type: string
+      username:
+        maxLength: 20
+        type: string
+    required:
+    - confirmPasswd
+    - email
+    - fullname
+    - noHp
+    - passwd
+    - username
+    type: object
+  response.Response:
+    properties:
+      code:
+        type: integer
+      message:
+        type: string
+      payload: {}
+      success:
+        type: boolean
+    type: object
+info:
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
+  description: This is a sample server Petstore server.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: Swagger Example API
+  version: "1.0"
+paths:
+  /:
+    get:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: Ping
+      tags:
+      - Ping
+  /sign-in:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: json req body
+        in: body
+        name: req
+        required: true
+        schema:
+          $ref: '#/definitions/controller.signinReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: Sign in a user
+      tags:
+      - Authentication
+  /sign-out:
+    get:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: Sign out a user
+      tags:
+      - Authentication
+  /sign-up:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: json req body
+        in: body
+        name: req
+        required: true
+        schema:
+          $ref: '#/definitions/controller.signupReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: Sign up a user
+      tags:
+      - Authentication
+swagger: "2.0"

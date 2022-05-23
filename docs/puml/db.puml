@@ -1,0 +1,73 @@
+@startuml
+
+!define type(x) <color:green>""x""</color>
+
+enum "user_type" <<(E,Crimson)>> {
+  ADMIN
+  USER
+}
+
+entity "property" <<(T,LightGreen)>> {
+    + property_id: type(int8) [PK]
+    --
+    *property_name: type(varchar(200))
+    *photo_id: type(int8)
+    *is_active: type(bool)
+    *create_by: type(int8)
+    *create_dt: type(timestampTz)
+    *update_by: type(int8)
+    *update_dt: type(timestampTz)
+    delete_by: type(int8)
+    delete_dt: type(timestampTz)
+}
+
+entity "user" <<(P,LightGreen)>> {
+    + user_id: type(int8) [PK]
+    --
+    *fullname: type(varchar(80))
+    *email: type(varchar(200))
+    *no_hp:type(varchar(20))
+    *user_type: type(user_type)
+    *username: type(varchar(50))
+    *passwd: type(varchar(500))
+    *photo_id: type(int8)
+    *is_active: type(bool)
+    *last_login_dt: type(timestampTz)
+    *pass_version: type(int4)
+    *create_by: type(int8)
+    *create_dt: type(timestampTz)
+    *update_by: type(int8)
+    *update_dt: type(timestampTz)
+    delete_by: type(int8)
+    delete_dt: type(timestampTz)
+}
+
+entity "item" <<(T,LightGreen)>> {
+    + item_id: type(int8) [PK]
+    --
+    *property_id: type(int8) [FK]
+    *item_name: type(varchar(200))
+    *is_active: type(bool)
+    *create_by: type(int8)
+    *create_dt: type(timestampTz)
+    *update_by: type(int8)
+    *update_dt: type(timestampTz)
+    delete_by: type(int8)
+    delete_dt: type(timestampTz)
+}
+
+
+
+entity "userproperty" <<(T,LightGreen)>> {
+    + userproperty_id: type(int8) [PK]
+    --
+    *user_id: type(int8) [FK]
+    *property_id: type(int8) [FK]
+}
+
+user --{ userproperty
+property --{ userproperty
+property --{ item
+
+
+@enduml
