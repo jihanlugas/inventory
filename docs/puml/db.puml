@@ -47,6 +47,8 @@ entity "item" <<(T,LightGreen)>> {
     --
     *property_id: type(int8) [FK]
     *item_name: type(varchar(200))
+    *item_description: type(varchar(500))
+    *price: type(int8)
     *is_active: type(bool)
     *create_by: type(int8)
     *create_dt: type(timestampTz)
@@ -63,6 +65,8 @@ entity "userproperty" <<(T,LightGreen)>> {
     --
     *user_id: type(int8) [FK]
     *property_id: type(int8) [FK]
+    *is_default: type(bool)
+
 }
 
 user --{ userproperty

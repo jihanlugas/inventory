@@ -23,12 +23,20 @@ func Init() *echo.Echo {
 	web := websiteRouter()
 	checkToken := checkTokenMiddleware()
 	userController := controller.UserComposer()
+	itemController := controller.ItemComposer()
 
 	web.GET("/swg/*", echoSwagger.WrapHandler)
 	web.GET("/", controller.Ping)
 	web.POST("/sign-up", userController.SignUp)
 	web.POST("/sign-in", userController.SignIn)
 	web.GET("/sign-out", userController.SignOut, checkToken)
+
+	webUser := web.Group("/user", checkToken)
+	webUser.GET("/me", userController.Me)
+
+	webItem := web.Group("/item")
+	webItem.GET("", itemController.Page)
+	webItem.POST("/create", itemController.Create, checkToken)
 
 	return web
 }
@@ -55,9 +63,10 @@ func checkTokenMiddleware() echo.MiddlewareFunc {
 					return response.ErrorForce("Akses telah kadaluarsa!", response.Payload{}).SendJSON(c)
 				} else {
 					usrLogin := controller.UserLogin{
-						UserType:    string(bytes.TrimSpace(tokenPayload[8:28])),
-						UserID:      int64(binary.BigEndian.Uint64(tokenPayload[36:])),
-						PassVersion: int(binary.LittleEndian.Uint16(tokenPayload[44:])),
+						UserType:    string(bytes.TrimSpace(tokenPayload[8:32])),
+						UserID:      int64(binary.BigEndian.Uint64(tokenPayload[40:48])),
+						PassVersion: int(binary.BigEndian.Uint32(tokenPayload[48:52])),
+						PropertyID:  int64(binary.BigEndian.Uint64(tokenPayload[52:60])),
 					}
 					c.Set(constant.TokenUserContext, usrLogin)
 					return next(c)

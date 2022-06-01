@@ -53,6 +53,109 @@ const docTemplate = `{
                 }
             }
         },
+        "/item": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Item"
+                ],
+                "summary": "Page Item",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "page",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "payload": {
+                                            "$ref": "#/definitions/response.Pagination"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/item/create": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Item"
+                ],
+                "summary": "Create Item",
+                "parameters": [
+                    {
+                        "description": "json req body",
+                        "name": "req",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/controller.createItemReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "payload": {
+                                            "$ref": "#/definitions/model.ItemRes"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/sign-in": {
             "post": {
                 "consumes": [
@@ -158,9 +261,66 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/user/me": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User"
+                ],
+                "summary": "To do get current active user",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
+        "controller.createItemReq": {
+            "type": "object",
+            "required": [
+                "isActive",
+                "itemDescription",
+                "itemName",
+                "price",
+                "propertyId"
+            ],
+            "properties": {
+                "isActive": {
+                    "type": "boolean"
+                },
+                "itemDescription": {
+                    "type": "string",
+                    "maxLength": 200
+                },
+                "itemName": {
+                    "type": "string",
+                    "maxLength": 200
+                },
+                "price": {
+                    "type": "integer"
+                },
+                "propertyId": {
+                    "type": "integer"
+                }
+            }
+        },
         "controller.signinReq": {
             "type": "object",
             "required": [
@@ -186,6 +346,7 @@ const docTemplate = `{
                 "fullname",
                 "noHp",
                 "passwd",
+                "propertyName",
                 "username"
             ],
             "properties": {
@@ -209,9 +370,85 @@ const docTemplate = `{
                     "type": "string",
                     "maxLength": 200
                 },
+                "propertyName": {
+                    "type": "string",
+                    "maxLength": 200
+                },
                 "username": {
                     "type": "string",
                     "maxLength": 20
+                }
+            }
+        },
+        "model.ItemRes": {
+            "type": "object",
+            "required": [
+                "createBy",
+                "createDt",
+                "isActive",
+                "itemDescription",
+                "itemId",
+                "itemName",
+                "price",
+                "propertyId",
+                "updateBy",
+                "updateDt"
+            ],
+            "properties": {
+                "createBy": {
+                    "type": "integer"
+                },
+                "createDt": {
+                    "type": "string"
+                },
+                "isActive": {
+                    "type": "boolean"
+                },
+                "itemDescription": {
+                    "type": "string",
+                    "maxLength": 200
+                },
+                "itemId": {
+                    "type": "integer"
+                },
+                "itemName": {
+                    "type": "string",
+                    "maxLength": 200
+                },
+                "price": {
+                    "type": "integer"
+                },
+                "propertyId": {
+                    "type": "integer"
+                },
+                "updateBy": {
+                    "type": "integer"
+                },
+                "updateDt": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.Pagination": {
+            "type": "object",
+            "properties": {
+                "dataPerPage": {
+                    "type": "integer"
+                },
+                "list": {
+                    "type": "array",
+                    "items": {
+                        "type": "object"
+                    }
+                },
+                "page": {
+                    "type": "integer"
+                },
+                "totalData": {
+                    "type": "integer"
+                },
+                "totalPage": {
+                    "type": "integer"
                 }
             }
         },
@@ -224,7 +461,9 @@ const docTemplate = `{
                 "message": {
                     "type": "string"
                 },
-                "payload": {},
+                "payload": {
+                    "type": "object"
+                },
                 "success": {
                     "type": "boolean"
                 }

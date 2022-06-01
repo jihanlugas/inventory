@@ -12,11 +12,8 @@ var dbCmd = &cobra.Command{
 	Short: "Command related with database",
 	Long: `With this command you can
 	create : create new database if not exists
-	destroy: delete database 
+	drop: delete database 
 	`,
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("Please specify specific database command")
-	},
 }
 
 var dbCreateCmd = &cobra.Command{
@@ -28,9 +25,19 @@ var dbCreateCmd = &cobra.Command{
 	},
 }
 
+var dbDropCmd = &cobra.Command{
+	Use:   "drop",
+	Short: "Drop database table",
+	Long:  `Drop database table`,
+	Run: func(cmd *cobra.Command, args []string) {
+		drop()
+	},
+}
+
 func init() {
 	rootCmd.AddCommand(dbCmd)
 	dbCmd.AddCommand(dbCreateCmd)
+	dbCmd.AddCommand(dbDropCmd)
 }
 
 func create() {
@@ -39,7 +46,7 @@ func create() {
 	dbpool := db.Initialize()
 	defer dbpool.Close()
 
-	sqlContent, err := ioutil.ReadFile("./docs/sql/db.sql")
+	sqlContent, err := ioutil.ReadFile("./docs/sql/create.sql")
 	if err != nil {
 		panic(err)
 	}
@@ -54,7 +61,7 @@ func create() {
 	}
 	defer db.DeferHandleTransaction(ctx, tx)
 
-	exec, err := tx.Exec(ctx, sql)
+	_, err = tx.Exec(ctx, sql)
 	if err != nil {
 		fmt.Println("err ", err)
 		panic(err)
@@ -65,6 +72,40 @@ func create() {
 		panic(err)
 	}
 
-	fmt.Println("exec ", exec)
-	fmt.Println("success")
+	fmt.Println("success create")
+}
+
+func drop() {
+	var err error
+
+	dbpool := db.Initialize()
+	defer dbpool.Close()
+
+	sqlContent, err := ioutil.ReadFile("./docs/sql/drop.sql")
+	if err != nil {
+		panic(err)
+	}
+	sql := string(sqlContent)
+
+	conn, ctx, closeConn := db.GetConnection()
+	defer closeConn()
+
+	tx, err := conn.Begin(ctx)
+	if err != nil {
+		panic(err)
+	}
+	defer db.DeferHandleTransaction(ctx, tx)
+
+	_, err = tx.Exec(ctx, sql)
+	if err != nil {
+		fmt.Println("err ", err)
+		panic(err)
+	}
+
+	if err = tx.Commit(ctx); err != nil {
+		_ = tx.Rollback(ctx)
+		panic(err)
+	}
+
+	fmt.Println("success drop")
 }

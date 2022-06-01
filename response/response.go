@@ -11,7 +11,7 @@ type Response struct {
 	Code      int         `json:"code"`
 	IsSuccess bool        `json:"success"`
 	Message   string      `json:"message"`
-	Payload   interface{} `json:"payload"`
+	Payload   interface{} `json:"payload" swaggertype:"object"`
 }
 
 type Payload map[string]interface{}

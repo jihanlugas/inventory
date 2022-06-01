@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"github.com/joho/godotenv"
 	"os"
+	"strconv"
 )
 
 const (
@@ -34,7 +35,8 @@ var (
 	CertificateKeyFilePath string
 	CookieAuthName         string
 	CryptoKey              []byte
-	//MaxSizeUploadPhotoByte int64
+	MaxSizeUploadPhotoByte int64
+	DataPerPage            int
 )
 
 func init() {
@@ -60,8 +62,15 @@ func init() {
 	LogPath = os.Getenv("LOG_PATH")
 	CertificateFilePath = os.Getenv("CERTIFICATE_FILE_PATH")
 	CertificateKeyFilePath = os.Getenv("CERTIFICATE_KEY_FILE_PATH")
-	CookieAuthName = os.Getenv("CERTIFICATE_KEY_FILE_PATH")
-	//MaxSizeUploadPhotoByte = os.Getenv("MAX_SIZE_UPLOAD_PHOTO_BYTE")
+	CookieAuthName = os.Getenv("COOKIE_AUTH_NAME")
+	MaxSizeUploadPhotoByte, err = strconv.ParseInt(os.Getenv("MAX_SIZE_UPLOAD_PHOTO_BYTE"), 10, 64)
+	if err != nil {
+		panic(err)
+	}
+	DataPerPage, err = strconv.Atoi(os.Getenv("MIN_DATA_PER_PAGE"))
+	if err != nil {
+		panic(err)
+	}
 
 	hasher := md5.New()
 	hasher.Write([]byte(os.Getenv("CRYPTO_KEY")))

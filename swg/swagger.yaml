@@ -1,4 +1,25 @@
 definitions:
+  controller.createItemReq:
+    properties:
+      isActive:
+        type: boolean
+      itemDescription:
+        maxLength: 200
+        type: string
+      itemName:
+        maxLength: 200
+        type: string
+      price:
+        type: integer
+      propertyId:
+        type: integer
+    required:
+    - isActive
+    - itemDescription
+    - itemName
+    - price
+    - propertyId
+    type: object
   controller.signinReq:
     properties:
       passwd:
@@ -28,6 +49,9 @@ definitions:
       passwd:
         maxLength: 200
         type: string
+      propertyName:
+        maxLength: 200
+        type: string
       username:
         maxLength: 20
         type: string
@@ -37,7 +61,59 @@ definitions:
     - fullname
     - noHp
     - passwd
+    - propertyName
     - username
+    type: object
+  model.ItemRes:
+    properties:
+      createBy:
+        type: integer
+      createDt:
+        type: string
+      isActive:
+        type: boolean
+      itemDescription:
+        maxLength: 200
+        type: string
+      itemId:
+        type: integer
+      itemName:
+        maxLength: 200
+        type: string
+      price:
+        type: integer
+      propertyId:
+        type: integer
+      updateBy:
+        type: integer
+      updateDt:
+        type: string
+    required:
+    - createBy
+    - createDt
+    - isActive
+    - itemDescription
+    - itemId
+    - itemName
+    - price
+    - propertyId
+    - updateBy
+    - updateDt
+    type: object
+  response.Pagination:
+    properties:
+      dataPerPage:
+        type: integer
+      list:
+        items:
+          type: object
+        type: array
+      page:
+        type: integer
+      totalData:
+        type: integer
+      totalPage:
+        type: integer
     type: object
   response.Response:
     properties:
@@ -45,7 +121,8 @@ definitions:
         type: integer
       message:
         type: string
-      payload: {}
+      payload:
+        type: object
       success:
         type: boolean
     type: object
@@ -80,6 +157,66 @@ paths:
       summary: Ping
       tags:
       - Ping
+  /item:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - in: query
+        name: limit
+        type: integer
+      - in: query
+        name: page
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                payload:
+                  $ref: '#/definitions/response.Pagination'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: Page Item
+      tags:
+      - Item
+  /item/create:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: json req body
+        in: body
+        name: req
+        required: true
+        schema:
+          $ref: '#/definitions/controller.createItemReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                payload:
+                  $ref: '#/definitions/model.ItemRes'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: Create Item
+      tags:
+      - Item
   /sign-in:
     post:
       consumes:
@@ -148,4 +285,22 @@ paths:
       summary: Sign up a user
       tags:
       - Authentication
+  /user/me:
+    get:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: To do get current active user
+      tags:
+      - User
 swagger: "2.0"

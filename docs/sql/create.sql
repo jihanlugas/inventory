@@ -60,16 +60,18 @@ CREATE TABLE public.property
 
 CREATE TABLE public.item
 (
-    item_id     int8           NOT NULL DEFAULT next_id(),
-    property_id int8           NOT NULL,
-    item_name   varchar(200)   NOT NULL,
-    is_active   bool           NOT NULL,
-    create_by   int8           NOT NULL,
-    create_dt   timestamptz(0) NOT NULL,
-    update_by   int8           NOT NULL,
-    update_dt   timestamptz(0) NOT NULL,
-    delete_by   int8           NULL,
-    delete_dt   timestamptz(0) NULL,
+    item_id          int8           NOT NULL DEFAULT next_id(),
+    property_id      int8           NOT NULL,
+    item_name        varchar(200)   NOT NULL,
+    item_description varchar(200)   NOT NULL,
+    price            int8           NOT NULL,
+    is_active        bool           NOT NULL,
+    create_by        int8           NOT NULL,
+    create_dt        timestamptz(0) NOT NULL,
+    update_by        int8           NOT NULL,
+    update_dt        timestamptz(0) NOT NULL,
+    delete_by        int8           NULL,
+    delete_dt        timestamptz(0) NULL,
     CONSTRAINT item_pk PRIMARY KEY (item_id)
 );
 
@@ -78,5 +80,6 @@ CREATE TABLE public.userproperty
     userproperty_id int8 NOT NULL DEFAULT next_id(),
     user_id         int8 NOT NULL,
     property_id     int8 NOT NULL,
+    is_default       bool NOT NULL,
     CONSTRAINT userproperty_pk PRIMARY KEY (userproperty_id)
 );
