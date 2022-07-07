@@ -1,6 +1,8 @@
 package request
 
-import "github.com/jihanlugas/inventory/config"
+import (
+	"github.com/jihanlugas/inventory/config"
+)
 
 type Paging struct {
 	Page  int `json:"page,omitempty" form:"page" query:"page"`

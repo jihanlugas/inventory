@@ -45,7 +45,7 @@
             }
         },
         "/item": {
-            "get": {
+            "post": {
                 "consumes": [
                     "application/json"
                 ],
@@ -58,14 +58,13 @@
                 "summary": "Page Item",
                 "parameters": [
                     {
-                        "type": "integer",
-                        "name": "limit",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "name": "page",
-                        "in": "query"
+                        "description": "payload",
+                        "name": "req",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/controller.pageItemReq"
+                        }
                     }
                 ],
                 "responses": {
@@ -110,12 +109,132 @@
                 "summary": "Create Item",
                 "parameters": [
                     {
-                        "description": "json req body",
+                        "type": "string",
+                        "description": "Item Name",
+                        "name": "itemName",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Item Description",
+                        "name": "itemDescription",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Active",
+                        "name": "isActive",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "file",
+                        "description": "Photo",
+                        "name": "photo",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "payload": {
+                                            "$ref": "#/definitions/controller.itemRes"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/item/{item_id}": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Item"
+                ],
+                "summary": "Get Item",
+                "parameters": [
+                    {
+                        "type": "number",
+                        "default": 0,
+                        "description": "item_id",
+                        "name": "kanji",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "payload": {
+                                            "$ref": "#/definitions/controller.itemRes"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/itemvariant": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Itemvariant"
+                ],
+                "summary": "Page Itemvariant",
+                "parameters": [
+                    {
+                        "description": "payload",
                         "name": "req",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/controller.createItemReq"
+                            "$ref": "#/definitions/controller.pageItemvariantReq"
                         }
                     }
                 ],
@@ -131,7 +250,134 @@
                                     "type": "object",
                                     "properties": {
                                         "payload": {
-                                            "$ref": "#/definitions/model.ItemRes"
+                                            "$ref": "#/definitions/response.Pagination"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/itemvariant/create": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Itemvariant"
+                ],
+                "summary": "Create Itemvariant",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Itemvariant Name",
+                        "name": "itemvariantName",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Itemvariant Description",
+                        "name": "itemvariantDescription",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Price",
+                        "name": "price",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Active",
+                        "name": "isActive",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "file",
+                        "description": "Photo",
+                        "name": "photo",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "payload": {
+                                            "$ref": "#/definitions/controller.itemvariantRes"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/itemvariant/{itemvariant_id}": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Itemvariant"
+                ],
+                "summary": "Get Itemvariant",
+                "parameters": [
+                    {
+                        "type": "number",
+                        "default": 0,
+                        "description": "itemvariant_id",
+                        "name": "kanji",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "payload": {
+                                            "$ref": "#/definitions/controller.itemvariantRes"
                                         }
                                     }
                                 }
@@ -283,31 +529,109 @@
         }
     },
     "definitions": {
-        "controller.createItemReq": {
+        "controller.itemRes": {
             "type": "object",
-            "required": [
-                "isActive",
-                "itemDescription",
-                "itemName",
-                "price",
-                "propertyId"
-            ],
             "properties": {
+                "createBy": {
+                    "type": "integer"
+                },
+                "createDt": {
+                    "type": "string"
+                },
                 "isActive": {
                     "type": "boolean"
                 },
                 "itemDescription": {
-                    "type": "string",
-                    "maxLength": 200
+                    "type": "string"
+                },
+                "itemId": {
+                    "type": "integer"
                 },
                 "itemName": {
-                    "type": "string",
-                    "maxLength": 200
+                    "type": "string"
+                },
+                "photoUrl": {
+                    "type": "string"
+                },
+                "propertyId": {
+                    "type": "integer"
+                },
+                "updateBy": {
+                    "type": "integer"
+                },
+                "updateDt": {
+                    "type": "string"
+                }
+            }
+        },
+        "controller.itemvariantRes": {
+            "type": "object",
+            "properties": {
+                "createBy": {
+                    "type": "integer"
+                },
+                "createDt": {
+                    "type": "string"
+                },
+                "isActive": {
+                    "type": "boolean"
+                },
+                "itemId": {
+                    "type": "integer"
+                },
+                "itemvariantDescription": {
+                    "type": "string"
+                },
+                "itemvariantId": {
+                    "type": "integer"
+                },
+                "itemvariantName": {
+                    "type": "string"
+                },
+                "photoUrl": {
+                    "type": "string"
                 },
                 "price": {
                     "type": "integer"
                 },
-                "propertyId": {
+                "updateBy": {
+                    "type": "integer"
+                },
+                "updateDt": {
+                    "type": "string"
+                }
+            }
+        },
+        "controller.pageItemReq": {
+            "type": "object",
+            "properties": {
+                "itemDescription": {
+                    "type": "string"
+                },
+                "itemName": {
+                    "type": "string"
+                },
+                "limit": {
+                    "type": "integer"
+                },
+                "page": {
+                    "type": "integer"
+                }
+            }
+        },
+        "controller.pageItemvariantReq": {
+            "type": "object",
+            "properties": {
+                "itemvariantDescription": {
+                    "type": "string"
+                },
+                "itemvariantName": {
+                    "type": "string"
+                },
+                "limit": {
+                    "type": "integer"
+                },
+                "page": {
                     "type": "integer"
                 }
             }
@@ -368,55 +692,6 @@
                 "username": {
                     "type": "string",
                     "maxLength": 20
-                }
-            }
-        },
-        "model.ItemRes": {
-            "type": "object",
-            "required": [
-                "createBy",
-                "createDt",
-                "isActive",
-                "itemDescription",
-                "itemId",
-                "itemName",
-                "price",
-                "propertyId",
-                "updateBy",
-                "updateDt"
-            ],
-            "properties": {
-                "createBy": {
-                    "type": "integer"
-                },
-                "createDt": {
-                    "type": "string"
-                },
-                "isActive": {
-                    "type": "boolean"
-                },
-                "itemDescription": {
-                    "type": "string",
-                    "maxLength": 200
-                },
-                "itemId": {
-                    "type": "integer"
-                },
-                "itemName": {
-                    "type": "string",
-                    "maxLength": 200
-                },
-                "price": {
-                    "type": "integer"
-                },
-                "propertyId": {
-                    "type": "integer"
-                },
-                "updateBy": {
-                    "type": "integer"
-                },
-                "updateDt": {
-                    "type": "string"
                 }
             }
         },

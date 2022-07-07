@@ -10,8 +10,8 @@ type PublicItem struct {
 	ItemID          int64      `db:"item_id,pk" json:"itemId" form:"itemId" validate:"required"`
 	PropertyID      int64      `db:"property_id,use_zero" json:"propertyId" form:"propertyId" validate:"required"`
 	ItemName        string     `db:"item_name,use_zero" json:"itemName" form:"itemName" validate:"required,lte=200"`
-	ItemDescription string     `db:"item_description,use_zero" json:"itemDescription" form:"itemDescription" validate:"required,lte=200"`
-	Price           int64      `db:"price,use_zero" json:"price" form:"price" validate:"required"`
+	ItemDescription string     `db:"item_description,use_zero" json:"itemDescription" form:"itemDescription" validate:"required,lte=500"`
+	PhotoID         int64      `db:"photo_id,use_zero" json:"photoId" form:"photoId" validate:"required"`
 	IsActive        bool       `db:"is_active,use_zero" json:"isActive" form:"isActive" validate:"required"`
 	CreateBy        int64      `db:"create_by,use_zero" json:"createBy" form:"createBy" validate:"required"`
 	CreateDt        *time.Time `db:"create_dt,use_zero" json:"createDt" form:"createDt" validate:"required"`

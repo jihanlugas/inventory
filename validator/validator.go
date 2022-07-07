@@ -1,8 +1,11 @@
 package validator
 
 import (
+	"github.com/jihanlugas/inventory/config"
 	"github.com/jihanlugas/inventory/db"
 	"github.com/jihanlugas/inventory/utils"
+	"mime/multipart"
+	"path/filepath"
 	"reflect"
 	"regexp"
 	"strings"
@@ -56,7 +59,7 @@ func NewValidator() *CustomValidator {
 	validate.RegisterValidation("existsdata", existsDataOnDbTable)
 	validate.RegisterValidation("no_hp", validNoHp)
 	validate.RegisterValidation("passwdComplex", checkPasswordComplexity)
-	//validate.RegisterValidation("photo", photoCheck, true)
+	validate.RegisterValidation("photo", photoCheck, true)
 	validate.RegisterValidation("hiragana", hiragana)
 	validate.RegisterValidation("katakana", katakana)
 	validate.RegisterValidation("kana", kana)
@@ -107,36 +110,36 @@ func kanji(fl validator.FieldLevel) bool {
 	return regKanji.MatchString(text)
 }
 
-//func photoCheck(fl validator.FieldLevel) bool {
-//	params := strings.Fields(fl.Param())
-//
-//	if len(params) == 0 {
-//		return true
-//	}
-//	parentVal := fl.Parent()
-//	if parentVal.Kind() == reflect.Ptr {
-//		parentVal = reflect.Indirect(parentVal)
-//	}
-//	// field photo harus dengan tipe data: *multipart.FileHeader ( pointer )
-//	photoVal := parentVal.FieldByName(params[0])
-//	if photoVal.Kind() != reflect.Ptr {
-//		return false
-//	}
-//	if photoVal.IsZero() {
-//		return true
-//	}
-//	if f, ok := photoVal.Interface().(*multipart.FileHeader); !ok {
-//		return false
-//	} else {
-//		if !regExt.MatchString(filepath.Ext(f.Filename)) {
-//			return false
-//		}
-//		if f.Size > config.MaxSizeUploadPhotoByte {
-//			return false
-//		}
-//		return true
-//	}
-//}
+func photoCheck(fl validator.FieldLevel) bool {
+	params := strings.Fields(fl.Param())
+
+	if len(params) == 0 {
+		return true
+	}
+	parentVal := fl.Parent()
+	if parentVal.Kind() == reflect.Ptr {
+		parentVal = reflect.Indirect(parentVal)
+	}
+	// field photo harus dengan tipe data: *multipart.FileHeader ( pointer )
+	photoVal := parentVal.FieldByName(params[0])
+	if photoVal.Kind() != reflect.Ptr {
+		return false
+	}
+	if photoVal.IsZero() {
+		return true
+	}
+	if f, ok := photoVal.Interface().(*multipart.FileHeader); !ok {
+		return false
+	} else {
+		if !regExt.MatchString(filepath.Ext(f.Filename)) {
+			return false
+		}
+		if f.Size > config.MaxSizeUploadPhotoByte {
+			return false
+		}
+		return true
+	}
+}
 
 func notExistsOnDbTable(fl validator.FieldLevel) bool {
 	var err error

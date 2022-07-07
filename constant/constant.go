@@ -7,4 +7,10 @@ package constant
 const (
 	TokenUserContext = "usr"
 	TokenPayloadLen  = 60
+	FormatDateLayout = "2006-01-02"
+
+	PhotoRefTableUser        = "user"
+	PhotoRefTableProperty    = "property"
+	PhotoRefTableItem        = "item"
+	PhotoRefTableItemvariant = "itemvariant"
 )

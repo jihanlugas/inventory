@@ -7,6 +7,29 @@ enum "user_type" <<(E,Crimson)>> {
   USER
 }
 
+entity "photo" <<(T,LightGreen)>> {
+    + photo_id: type(int8) [PK]
+    --
+    *client_name: type(varchar(200))
+    *server_name: type(varchar(200))
+    *ext: type(varchar(5))
+    *photo_path: type(varchar(200))
+    *photo_size: type(int8)
+    *photo_width: type(int8)
+    *photo_heigth: type(int8)
+    *create_by: type(int8)
+    *create_dt: type(timestampTz)
+}
+
+entity "photoinc" <<(T,LightGreen)>> {
+    + photoinc_id: type(int8) [PK]
+    --
+    *ref_table: type(varchar(50))
+    *folder_inc: type(int8)
+    *folder_name: type(varchar(50))
+    *running: type(int8)
+}
+
 entity "property" <<(T,LightGreen)>> {
     + property_id: type(int8) [PK]
     --
@@ -48,8 +71,8 @@ entity "item" <<(T,LightGreen)>> {
     *property_id: type(int8) [FK]
     *item_name: type(varchar(200))
     *item_description: type(varchar(500))
-    *price: type(int8)
     *is_active: type(bool)
+    *photo_id: type(int8)
     *create_by: type(int8)
     *create_dt: type(timestampTz)
     *update_by: type(int8)
@@ -58,7 +81,22 @@ entity "item" <<(T,LightGreen)>> {
     delete_dt: type(timestampTz)
 }
 
-
+entity "itemvariant" <<(T,LightGreen)>> {
+    + itemvariant_id: type(int8) [PK]
+    --
+    *item_id: type(int8) [FK]
+    *itemvariant_name: type(varchar(200))
+    *itemvariant_description: type(varchar(500))
+    *price: type(int8)
+    *is_active: type(bool)
+    *photo_id: type(int8)
+    *create_by: type(int8)
+    *create_dt: type(timestampTz)
+    *update_by: type(int8)
+    *update_dt: type(timestampTz)
+    delete_by: type(int8)
+    delete_dt: type(timestampTz)
+}
 
 entity "userproperty" <<(T,LightGreen)>> {
     + userproperty_id: type(int8) [PK]
@@ -66,12 +104,12 @@ entity "userproperty" <<(T,LightGreen)>> {
     *user_id: type(int8) [FK]
     *property_id: type(int8) [FK]
     *is_default: type(bool)
-
 }
 
 user --{ userproperty
 property --{ userproperty
 property --{ item
+item --{ itemvariant
 
 
 @enduml

@@ -52,12 +52,15 @@ func runServer() {
 	wg.Add(1)
 	go func() {
 		r.Server.RegisterOnShutdown(shutdownCallback)
-		if config.Environment == config.Production {
+		if config.Debug {
 			if err = r.Start(":" + config.ListenTo.Port); err != nil && err != http.ErrServerClosed {
 				r.Logger.Fatal("Shutting down the server")
 			}
+			//if err = r.StartTLS(":"+config.ListenTo.Port, config.CertificateFilePath, config.CertificateKeyFilePath); err != nil && err != http.ErrServerClosed {
+			//	r.Logger.Fatal("Shutting down the server")
+			//}
 		} else {
-			if err = r.StartTLS(":"+config.ListenTo.Port, config.CertificateFilePath, config.CertificateKeyFilePath); err != nil && err != http.ErrServerClosed {
+			if err = r.Start(":" + config.ListenTo.Port); err != nil && err != http.ErrServerClosed {
 				r.Logger.Fatal("Shutting down the server")
 			}
 		}
@@ -74,7 +77,7 @@ func runServer() {
 	}
 
 	wg.Wait()
-	log.System.Info().Msg("Main System Shutdown!")
+	log.System.Warn().Msg("Main System Shutdown!")
 	log.CloseAll()
 }
 

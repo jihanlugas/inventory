@@ -24,19 +24,26 @@ func Init() *echo.Echo {
 	checkToken := checkTokenMiddleware()
 	userController := controller.UserComposer()
 	itemController := controller.ItemComposer()
+	itemvariantController := controller.ItemvariantComposer()
+
+	web.Static("/"+config.PhotoDirectory, config.PhotoDirectory)
 
 	web.GET("/swg/*", echoSwagger.WrapHandler)
 	web.GET("/", controller.Ping)
 	web.POST("/sign-up", userController.SignUp)
 	web.POST("/sign-in", userController.SignIn)
 	web.GET("/sign-out", userController.SignOut, checkToken)
-
-	webUser := web.Group("/user", checkToken)
-	webUser.GET("/me", userController.Me)
+	web.GET("/me", userController.Me, checkToken)
 
 	webItem := web.Group("/item")
-	webItem.GET("", itemController.Page)
+	webItem.POST("", itemController.Page)
+	webItem.GET("/:item_id", itemController.GetById)
 	webItem.POST("/create", itemController.Create, checkToken)
+
+	webItemvariant := web.Group("/itemvariant")
+	webItemvariant.POST("", itemvariantController.Page)
+	webItemvariant.GET("/:itemvariant_id", itemvariantController.GetById)
+	webItemvariant.POST("/create", itemvariantController.Create, checkToken)
 
 	return web
 }
@@ -96,7 +103,7 @@ func httpErrorHandler(err error, c echo.Context) {
 	default:
 		// Handle error dari panic
 		code = http.StatusInternalServerError
-		if config.Environment != config.Production {
+		if config.Debug {
 			errorResponse = &response.Response{
 				IsSuccess: false,
 				Message:   err.Error(),

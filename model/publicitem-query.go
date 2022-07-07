@@ -11,21 +11,21 @@ import (
 	"time"
 )
 
-type ItemRes struct {
-	ItemID          int64      `db:"item_id,pk" json:"itemId" form:"itemId" validate:"required"`
-	PropertyID      int64      `db:"property_id,use_zero" json:"propertyId" form:"propertyId" validate:"required"`
-	ItemName        string     `db:"item_name,use_zero" json:"itemName" form:"itemName" validate:"required,lte=200"`
-	ItemDescription string     `db:"item_description,use_zero" json:"itemDescription" form:"itemDescription" validate:"required,lte=200"`
-	Price           int64      `db:"price,use_zero" json:"price" form:"price" validate:"required"`
-	IsActive        bool       `db:"is_active,use_zero" json:"isActive" form:"isActive" validate:"required"`
-	CreateBy        int64      `db:"create_by,use_zero" json:"createBy" form:"createBy" validate:"required"`
-	CreateDt        *time.Time `db:"create_dt,use_zero" json:"createDt" form:"createDt" validate:"required"`
-	UpdateBy        int64      `db:"update_by,use_zero" json:"updateBy" form:"updateBy" validate:"required"`
-	UpdateDt        *time.Time `db:"update_dt,use_zero" json:"updateDt" form:"updateDt" validate:"required"`
+func GetItemQuery() *db.QueryComposer {
+	return db.Query(`SELECT item_id, property_id, item_name, item_description, is_active, photo_id, create_by, create_dt, update_by, update_dt FROM public.item`)
 }
 
-func GetItemQuery() *db.QueryComposer {
-	return db.Query(`SELECT item_id, property_id, item_name, item_description, price, is_active, create_by, create_dt, update_by, update_dt FROM public.item`)
+func (p *PublicItem) GetById(ctx context.Context, conn *pgxpool.Conn) error {
+	var err error
+
+	sql := GetItemQuery().
+		Where().
+		Int64(`item_id`, "=", p.ItemID).
+		IsNull(`delete_dt`).
+		OffsetLimit(0, 1)
+	err = pgxscan.Get(ctx, conn, p, sql.Build(), sql.Params()...)
+
+	return err
 }
 
 func GetItemWhere(ctx context.Context, conn *pgxpool.Conn, q *db.QueryBuilder) ([]PublicItem, error) {
@@ -50,13 +50,13 @@ func (p *PublicItem) Insert(ctx context.Context, tx pgx.Tx) error {
 	p.CreateDt = &now
 	p.UpdateDt = &now
 	err = tx.QueryRow(ctx, `INSERT INTO public.item
-		(property_id, item_name, item_description, price, is_active, create_by, create_dt, update_by, update_dt)
+		(property_id, item_name, item_description, photo_id, is_active, create_by, create_dt, update_by, update_dt)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 		RETURNING item_id;`,
 		p.PropertyID,
 		p.ItemName,
 		p.ItemDescription,
-		p.Price,
+		p.PhotoID,
 		p.IsActive,
 		p.CreateBy,
 		p.CreateDt,
@@ -67,19 +67,46 @@ func (p *PublicItem) Insert(ctx context.Context, tx pgx.Tx) error {
 	return err
 }
 
-func (p *PublicItem) Res() ItemRes {
-	var res ItemRes
+func (p *PublicItem) Update(ctx context.Context, tx pgx.Tx) error {
 
-	res.ItemID = p.ItemID
-	res.PropertyID = p.PropertyID
-	res.ItemName = p.ItemName
-	res.ItemDescription = p.ItemDescription
-	res.Price = p.Price
-	res.IsActive = p.IsActive
-	res.CreateBy = p.CreateBy
-	res.CreateDt = p.CreateDt
-	res.UpdateBy = p.UpdateBy
-	res.UpdateDt = p.UpdateDt
+	var err error
 
-	return res
+	now := time.Now()
+	p.UpdateDt = &now
+	_, err = tx.Exec(ctx, `UPDATE public.item SET property_id = $1
+		, item_name = $2
+		, item_description = $3
+		, photo_id = $4
+		, is_active = $5
+		, update_by = $6
+		, update_dt = $7
+		WHERE item_id = $8`,
+		p.PropertyID,
+		p.ItemName,
+		p.ItemDescription,
+		p.PhotoID,
+		p.IsActive,
+		p.UpdateBy,
+		p.UpdateDt,
+		p.ItemID,
+	)
+	return err
 }
+
+//func (p *PublicItem) Res(ctx context.Context, conn *pgxpool.Conn) ItemRes {
+//	var res ItemRes
+//
+//	res.ItemID = p.ItemID
+//	res.PropertyID = p.PropertyID
+//	res.ItemName = p.ItemName
+//	res.ItemDescription = p.ItemDescription
+//	res.Price = p.Price
+//	res.PhotoUrl = controller.GetPhotoUrl(ctx, conn, p.PhotoID)
+//	res.IsActive = p.IsActive
+//	res.CreateBy = p.CreateBy
+//	res.CreateDt = p.CreateDt
+//	res.UpdateBy = p.UpdateBy
+//	res.UpdateDt = p.UpdateDt
+//
+//	return res
+//}

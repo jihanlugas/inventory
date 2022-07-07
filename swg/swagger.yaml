@@ -1,24 +1,73 @@
 definitions:
-  controller.createItemReq:
+  controller.itemRes:
     properties:
+      createBy:
+        type: integer
+      createDt:
+        type: string
       isActive:
         type: boolean
       itemDescription:
-        maxLength: 200
         type: string
+      itemId:
+        type: integer
       itemName:
-        maxLength: 200
+        type: string
+      photoUrl:
+        type: string
+      propertyId:
+        type: integer
+      updateBy:
+        type: integer
+      updateDt:
+        type: string
+    type: object
+  controller.itemvariantRes:
+    properties:
+      createBy:
+        type: integer
+      createDt:
+        type: string
+      isActive:
+        type: boolean
+      itemId:
+        type: integer
+      itemvariantDescription:
+        type: string
+      itemvariantId:
+        type: integer
+      itemvariantName:
+        type: string
+      photoUrl:
         type: string
       price:
         type: integer
-      propertyId:
+      updateBy:
         type: integer
-    required:
-    - isActive
-    - itemDescription
-    - itemName
-    - price
-    - propertyId
+      updateDt:
+        type: string
+    type: object
+  controller.pageItemReq:
+    properties:
+      itemDescription:
+        type: string
+      itemName:
+        type: string
+      limit:
+        type: integer
+      page:
+        type: integer
+    type: object
+  controller.pageItemvariantReq:
+    properties:
+      itemvariantDescription:
+        type: string
+      itemvariantName:
+        type: string
+      limit:
+        type: integer
+      page:
+        type: integer
     type: object
   controller.signinReq:
     properties:
@@ -63,42 +112,6 @@ definitions:
     - passwd
     - propertyName
     - username
-    type: object
-  model.ItemRes:
-    properties:
-      createBy:
-        type: integer
-      createDt:
-        type: string
-      isActive:
-        type: boolean
-      itemDescription:
-        maxLength: 200
-        type: string
-      itemId:
-        type: integer
-      itemName:
-        maxLength: 200
-        type: string
-      price:
-        type: integer
-      propertyId:
-        type: integer
-      updateBy:
-        type: integer
-      updateDt:
-        type: string
-    required:
-    - createBy
-    - createDt
-    - isActive
-    - itemDescription
-    - itemId
-    - itemName
-    - price
-    - propertyId
-    - updateBy
-    - updateDt
     type: object
   response.Pagination:
     properties:
@@ -158,16 +171,16 @@ paths:
       tags:
       - Ping
   /item:
-    get:
+    post:
       consumes:
       - application/json
       parameters:
-      - in: query
-        name: limit
-        type: integer
-      - in: query
-        name: page
-        type: integer
+      - description: payload
+        in: body
+        name: req
+        required: true
+        schema:
+          $ref: '#/definitions/controller.pageItemReq'
       produces:
       - application/json
       responses:
@@ -187,17 +200,17 @@ paths:
       summary: Page Item
       tags:
       - Item
-  /item/create:
-    post:
+  /item/{item_id}:
+    get:
       consumes:
       - application/json
       parameters:
-      - description: json req body
-        in: body
-        name: req
+      - default: 0
+        description: item_id
+        in: path
+        name: kanji
         required: true
-        schema:
-          $ref: '#/definitions/controller.createItemReq'
+        type: number
       produces:
       - application/json
       responses:
@@ -208,7 +221,51 @@ paths:
             - $ref: '#/definitions/response.Response'
             - properties:
                 payload:
-                  $ref: '#/definitions/model.ItemRes'
+                  $ref: '#/definitions/controller.itemRes'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: Get Item
+      tags:
+      - Item
+  /item/create:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Item Name
+        in: formData
+        name: itemName
+        required: true
+        type: string
+      - description: Item Description
+        in: formData
+        name: itemDescription
+        required: true
+        type: string
+      - description: Active
+        in: formData
+        name: isActive
+        required: true
+        type: boolean
+      - description: Photo
+        in: formData
+        name: photo
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                payload:
+                  $ref: '#/definitions/controller.itemRes'
               type: object
         "500":
           description: Internal Server Error
@@ -217,6 +274,115 @@ paths:
       summary: Create Item
       tags:
       - Item
+  /itemvariant:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: payload
+        in: body
+        name: req
+        required: true
+        schema:
+          $ref: '#/definitions/controller.pageItemvariantReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                payload:
+                  $ref: '#/definitions/response.Pagination'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: Page Itemvariant
+      tags:
+      - Itemvariant
+  /itemvariant/{itemvariant_id}:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - default: 0
+        description: itemvariant_id
+        in: path
+        name: kanji
+        required: true
+        type: number
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                payload:
+                  $ref: '#/definitions/controller.itemvariantRes'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: Get Itemvariant
+      tags:
+      - Itemvariant
+  /itemvariant/create:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Itemvariant Name
+        in: formData
+        name: itemvariantName
+        required: true
+        type: string
+      - description: Itemvariant Description
+        in: formData
+        name: itemvariantDescription
+        required: true
+        type: string
+      - description: Price
+        in: formData
+        name: price
+        required: true
+        type: integer
+      - description: Active
+        in: formData
+        name: isActive
+        required: true
+        type: boolean
+      - description: Photo
+        in: formData
+        name: photo
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                payload:
+                  $ref: '#/definitions/controller.itemvariantRes'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: Create Itemvariant
+      tags:
+      - Itemvariant
   /sign-in:
     post:
       consumes:

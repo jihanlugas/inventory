@@ -1,11 +1,15 @@
 package controller
 
 import (
+	"context"
 	"encoding/binary"
 	"fmt"
+	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/jihanlugas/inventory/config"
 	"github.com/jihanlugas/inventory/constant"
 	"github.com/jihanlugas/inventory/cryption"
 	"github.com/jihanlugas/inventory/log"
+	"github.com/jihanlugas/inventory/model"
 	"github.com/jihanlugas/inventory/response"
 	"github.com/jihanlugas/inventory/validator"
 	"github.com/labstack/echo/v4"
@@ -104,4 +108,20 @@ func Ping(c echo.Context) error {
 func errorInternal(c echo.Context, err error) {
 	log.System.Error().Err(err).Str("Host", c.Request().Host).Str("Path", c.Path()).Send()
 	panic(err)
+}
+
+func getPhotoUrl(ctx context.Context, conn *pgxpool.Conn, photoID int64) string {
+	var err error
+	var photo model.PublicPhoto
+	if photoID == 0 {
+		return ""
+	}
+
+	photo.PhotoID = photoID
+	err = photo.GetById(ctx, conn)
+	if err != nil {
+		return ""
+	}
+
+	return config.PhotoAccessUrl + "/" + photo.PhotoPath
 }
