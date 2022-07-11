@@ -64,57 +64,6 @@ const docTemplate = `{
                 "tags": [
                     "Item"
                 ],
-                "summary": "Page Item",
-                "parameters": [
-                    {
-                        "description": "payload",
-                        "name": "req",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/controller.pageItemReq"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Response"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "payload": {
-                                            "$ref": "#/definitions/response.Pagination"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.Response"
-                        }
-                    }
-                }
-            }
-        },
-        "/item/create": {
-            "post": {
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Item"
-                ],
                 "summary": "Create Item",
                 "parameters": [
                     {
@@ -159,6 +108,57 @@ const docTemplate = `{
                                     "properties": {
                                         "payload": {
                                             "$ref": "#/definitions/controller.itemRes"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/item/page": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Item"
+                ],
+                "summary": "Page Item",
+                "parameters": [
+                    {
+                        "description": "payload",
+                        "name": "req",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/controller.pageItemReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "payload": {
+                                            "$ref": "#/definitions/response.Pagination"
                                         }
                                     }
                                 }
@@ -222,10 +222,8 @@ const docTemplate = `{
                         }
                     }
                 }
-            }
-        },
-        "/itemvariant": {
-            "post": {
+            },
+            "put": {
                 "consumes": [
                     "application/json"
                 ],
@@ -233,18 +231,45 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Itemvariant"
+                    "Item"
                 ],
-                "summary": "Page Itemvariant",
+                "summary": "Update Item",
                 "parameters": [
                     {
-                        "description": "payload",
-                        "name": "req",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/controller.pageItemvariantReq"
-                        }
+                        "type": "number",
+                        "default": 0,
+                        "description": "item_id",
+                        "name": "kanji",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Item Name",
+                        "name": "itemName",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Item Description",
+                        "name": "itemDescription",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Active",
+                        "name": "isActive",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "file",
+                        "description": "Photo",
+                        "name": "photo",
+                        "in": "formData",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -259,7 +284,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "payload": {
-                                            "$ref": "#/definitions/response.Pagination"
+                                            "$ref": "#/definitions/controller.itemRes"
                                         }
                                     }
                                 }
@@ -273,9 +298,45 @@ const docTemplate = `{
                         }
                     }
                 }
+            },
+            "delete": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Item"
+                ],
+                "summary": "Delete Item",
+                "parameters": [
+                    {
+                        "type": "number",
+                        "default": 0,
+                        "description": "item_id",
+                        "name": "kanji",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
             }
         },
-        "/itemvariant/create": {
+        "/itemvariant": {
             "post": {
                 "consumes": [
                     "application/json"
@@ -337,6 +398,57 @@ const docTemplate = `{
                                     "properties": {
                                         "payload": {
                                             "$ref": "#/definitions/controller.itemvariantRes"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/itemvariant/page": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Itemvariant"
+                ],
+                "summary": "Page Itemvariant",
+                "parameters": [
+                    {
+                        "description": "payload",
+                        "name": "req",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/controller.pageItemvariantReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "payload": {
+                                            "$ref": "#/definitions/response.Pagination"
                                         }
                                     }
                                 }
@@ -630,7 +742,13 @@ const docTemplate = `{
         },
         "controller.pageItemvariantReq": {
             "type": "object",
+            "required": [
+                "itemId"
+            ],
             "properties": {
+                "itemId": {
+                    "type": "integer"
+                },
                 "itemvariantDescription": {
                     "type": "string"
                 },

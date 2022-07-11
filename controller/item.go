@@ -35,6 +35,14 @@ type createItemReq struct {
 	PhotoChk        bool                  `json:"photo" validate:"required,photo=Photo"`
 }
 
+type updateItemReq struct {
+	ItemName        string                `json:"itemName" form:"itemName" validate:"required,lte=200"`
+	ItemDescription string                `json:"itemDescription" form:"itemDescription" validate:"lte=200"`
+	IsActive        bool                  `json:"isActive" form:"isActive" validate:""`
+	Photo           *multipart.FileHeader `json:"-"`
+	PhotoChk        bool                  `json:"photo" validate:"photo=Photo"`
+}
+
 type itemRes struct {
 	ItemID          int64      `json:"itemId"`
 	PropertyID      int64      `json:"propertyId"`
@@ -56,7 +64,7 @@ type itemRes struct {
 // @Param req body pageItemReq true "payload"
 // @Success      200  {object}	response.Response{payload=response.Pagination}
 // @Failure      500  {object}  response.Response
-// @Router /item [post]
+// @Router /item/page [post]
 func (h Item) Page(c echo.Context) error {
 	var err error
 
@@ -88,7 +96,7 @@ func (h Item) Page(c echo.Context) error {
 // @Param photo formData file true "Photo"
 // @Success      200  {object}	response.Response{payload=itemRes}
 // @Failure      500  {object}  response.Response
-// @Router /item/create [post]
+// @Router /item [post]
 func (h Item) Create(c echo.Context) error {
 	var err error
 	var data model.PublicItem
@@ -221,7 +229,8 @@ func getPageItem(req *pageItemReq) (error, int, []itemRes) {
 
 	q := model.GetItemQuery().Where().
 		StringLike("item.item_name", req.ItemName).
-		StringLike("item.item_description", req.ItemDescription)
+		StringLike("item.item_description", req.ItemDescription).
+		IsNull("item.delete_dt")
 
 	conn, ctx, closeConn := db.GetConnection()
 	defer closeConn()
@@ -268,4 +277,166 @@ func getPageItem(req *pageItemReq) (error, int, []itemRes) {
 	}
 
 	return err, cnt, listRes
+}
+
+// Update Item
+// @Summary Update Item
+// @Tags Item
+// @Accept json
+// @Produce json
+// @Param kanji path number true "item_id" default(0)
+// @Param itemName formData string true "Item Name"
+// @Param itemDescription formData string true "Item Description"
+// @Param isActive formData boolean true "Active"
+// @Param photo formData file true "Photo"
+// @Success      200  {object}	response.Response{payload=itemRes}
+// @Failure      500  {object}  response.Response
+// @Router /item/{item_id} [put]
+func (h Item) Update(c echo.Context) error {
+	var err error
+	var data model.PublicItem
+	var publicphoto model.PublicPhoto
+
+	loginUser, err := getUserLoginInfo(c)
+	if err != nil {
+		errorInternal(c, err)
+	}
+
+	ID, err := strconv.ParseInt(c.Param("item_id"), 10, 64)
+	if err != nil {
+		return response.StatusNotFound("data not found", response.Payload{}).SendJSON(c)
+	}
+
+	req := new(updateItemReq)
+	if err = c.Bind(req); err != nil {
+		return err
+	}
+
+	req.Photo, err = c.FormFile("photo")
+	if err != nil && !errors.Is(err, http.ErrMissingFile) {
+		errorInternal(c, err)
+	}
+	req.PhotoChk = req.Photo != nil
+
+	if err = c.Validate(req); err != nil {
+		return response.StatusBadRequest("validation failed", response.ValidationError(err)).SendJSON(c)
+	}
+
+	conn, ctx, closeConn := db.GetConnection()
+	defer closeConn()
+
+	data.ItemID = ID
+	err = data.GetById(ctx, conn)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return response.StatusNotFound("data not found", response.Payload{}).SendJSON(c)
+		}
+		errorInternal(c, err)
+	}
+
+	tx, err := conn.Begin(ctx)
+	if err != nil {
+		errorInternal(c, err)
+	}
+	defer db.DeferHandleTransaction(ctx, tx)
+
+	// proccess photo
+	if req.Photo != nil {
+		if data.PhotoID != 0 {
+			publicphoto.PhotoID = data.PhotoID
+			err = publicphoto.Delete(conn, ctx, tx)
+			if err != nil {
+				errorInternal(c, err)
+			}
+		}
+		publicphoto.CreateBy = loginUser.UserID
+		err = publicphoto.Upload(conn, ctx, tx, req.Photo, constant.PhotoRefTableItem)
+		if err != nil {
+			errorInternal(c, err)
+		}
+		data.PhotoID = publicphoto.PhotoID
+	}
+
+	data.ItemName = req.ItemName
+	data.ItemDescription = req.ItemDescription
+	data.IsActive = req.IsActive
+	data.UpdateBy = loginUser.UserID
+	err = data.Update(ctx, tx)
+	if err != nil {
+		errorInternal(c, err)
+	}
+
+	if err = tx.Commit(ctx); err != nil {
+		_ = tx.Rollback(ctx)
+		errorInternal(c, err)
+	}
+
+	res := itemRes{
+		ItemID:          data.ItemID,
+		PropertyID:      data.PropertyID,
+		ItemName:        data.ItemName,
+		ItemDescription: data.ItemDescription,
+		PhotoUrl:        getPhotoUrl(ctx, conn, data.PhotoID),
+		IsActive:        data.IsActive,
+		CreateBy:        data.CreateBy,
+		CreateDt:        data.CreateDt,
+		UpdateBy:        data.UpdateBy,
+		UpdateDt:        data.UpdateDt,
+	}
+
+	return response.StatusAccepted("success", res).SendJSON(c)
+}
+
+// Delete Item
+// @Summary Delete Item
+// @Tags Item
+// @Accept json
+// @Produce json
+// @Param kanji path number true "item_id" default(0)
+// @Success      200  {object}	response.Response
+// @Failure      500  {object}  response.Response
+// @Router /item/{item_id} [delete]
+func (h Item) Delete(c echo.Context) error {
+	var err error
+	var data model.PublicItem
+
+	loginUser, err := getUserLoginInfo(c)
+	if err != nil {
+		errorInternal(c, err)
+	}
+
+	ID, err := strconv.ParseInt(c.Param("item_id"), 10, 64)
+	if err != nil {
+		return response.StatusNotFound("data not found", response.Payload{}).SendJSON(c)
+	}
+
+	conn, ctx, closeConn := db.GetConnection()
+	defer closeConn()
+
+	data.ItemID = ID
+	err = data.GetById(ctx, conn)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return response.StatusNotFound("data not found", response.Payload{}).SendJSON(c)
+		}
+		errorInternal(c, err)
+	}
+
+	tx, err := conn.Begin(ctx)
+	if err != nil {
+		errorInternal(c, err)
+	}
+	defer db.DeferHandleTransaction(ctx, tx)
+
+	err = data.Delete(conn, ctx, tx, loginUser.UserID)
+	if err != nil {
+		errorInternal(c, err)
+	}
+
+	if err = tx.Commit(ctx); err != nil {
+		_ = tx.Rollback(ctx)
+		errorInternal(c, err)
+	}
+
+	return response.StatusOk("success", response.Payload{}).SendJSON(c)
 }

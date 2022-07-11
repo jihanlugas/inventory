@@ -23,6 +23,7 @@ func ItemvariantComposer() Itemvariant {
 
 type pageItemvariantReq struct {
 	request.Paging
+	ItemID                 int64  `json:"itemId" form:"itemId" query:"itemId" validate:"required"`
 	ItemvariantName        string `json:"itemvariantName" form:"itemvariantName" query:"itemvariantName"`
 	ItemvariantDescription string `json:"itemvariantDescription" form:"itemvariantDescription" query:"itemvariantDescription"`
 }
@@ -63,7 +64,7 @@ type itemvariantRes struct {
 // @Param photo formData file true "Photo"
 // @Success      200  {object}	response.Response{payload=itemvariantRes}
 // @Failure      500  {object}  response.Response
-// @Router /itemvariant/create [post]
+// @Router /itemvariant [post]
 func (h Itemvariant) Create(c echo.Context) error {
 	var err error
 	var data model.PublicItemvariant
@@ -166,7 +167,7 @@ func (h Itemvariant) GetById(c echo.Context) error {
 	conn, ctx, closeConn := db.GetConnection()
 	defer closeConn()
 
-	data.ItemID = ID
+	data.ItemvariantID = ID
 	err = data.GetById(ctx, conn)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -199,7 +200,7 @@ func (h Itemvariant) GetById(c echo.Context) error {
 // @Param req body pageItemvariantReq true "payload"
 // @Success      200  {object}	response.Response{payload=response.Pagination}
 // @Failure      500  {object}  response.Response
-// @Router /itemvariant [post]
+// @Router /itemvariant/page [post]
 func (h Itemvariant) Page(c echo.Context) error {
 	var err error
 
@@ -227,8 +228,10 @@ func getPageItemvariant(req *pageItemvariantReq) (error, int, []itemvariantRes) 
 	var listRes []itemvariantRes
 
 	q := model.GetItemvariantQuery().Where().
+		Int64("itemvariant.item_id", "=", req.ItemID).
 		StringLike("itemvariant.itemvariant_name", req.ItemvariantName).
-		StringLike("itemvariant.itemvariant_description", req.ItemvariantDescription)
+		StringLike("itemvariant.itemvariant_description", req.ItemvariantDescription).
+		IsNull("itemvariant.delete_dt")
 
 	conn, ctx, closeConn := db.GetConnection()
 	defer closeConn()

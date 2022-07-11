@@ -68,7 +68,6 @@ func (p *PublicItem) Insert(ctx context.Context, tx pgx.Tx) error {
 }
 
 func (p *PublicItem) Update(ctx context.Context, tx pgx.Tx) error {
-
 	var err error
 
 	now := time.Now()
@@ -88,6 +87,51 @@ func (p *PublicItem) Update(ctx context.Context, tx pgx.Tx) error {
 		p.IsActive,
 		p.UpdateBy,
 		p.UpdateDt,
+		p.ItemID,
+	)
+	return err
+}
+
+func (p *PublicItem) Delete(conn *pgxpool.Conn, ctx context.Context, tx pgx.Tx, userID int64) error {
+	var err error
+	var publicphoto PublicPhoto
+
+	if p.PhotoID != 0 {
+		publicphoto.PhotoID = p.PhotoID
+		err = publicphoto.Delete(conn, ctx, tx)
+		if err != nil {
+			return err
+		}
+		p.PhotoID = 0
+	}
+
+	q := GetItemvariantQuery().Where().
+		Int64("itemvariant.item_id", "=", p.ItemID).
+		IsNull("itemvariant.delete_dt")
+
+	itemvariants, err := GetItemvariantWhere(ctx, conn, q)
+	if err != nil {
+		return err
+	}
+
+	for _, itemvariant := range itemvariants {
+		itemvariant.DeleteBy = userID
+		err = itemvariant.Delete(conn, ctx, tx, userID)
+		if err != nil {
+			return err
+		}
+	}
+
+	now := time.Now()
+	p.DeleteBy = userID
+	p.DeleteDt = &now
+	_, err = tx.Exec(ctx, `UPDATE public.item SET delete_by = $1
+		, delete_dt = $2
+		, photo_id = $3
+		WHERE item_id = $4`,
+		p.DeleteBy,
+		p.DeleteDt,
+		p.PhotoID,
 		p.ItemID,
 	)
 	return err

@@ -95,3 +95,31 @@ func (p *PublicItemvariant) Update(ctx context.Context, tx pgx.Tx) error {
 	)
 	return err
 }
+
+func (p *PublicItemvariant) Delete(conn *pgxpool.Conn, ctx context.Context, tx pgx.Tx, userID int64) error {
+	var err error
+	var publicphoto PublicPhoto
+
+	if p.PhotoID != 0 {
+		publicphoto.PhotoID = p.PhotoID
+		err = publicphoto.Delete(conn, ctx, tx)
+		if err != nil {
+			return err
+		}
+		p.PhotoID = 0
+	}
+
+	now := time.Now()
+	p.DeleteBy = userID
+	p.DeleteDt = &now
+	_, err = tx.Exec(ctx, `UPDATE public.itemvariant SET delete_by = $1
+		, delete_dt = $2
+		, photo_id = $3
+		WHERE itemvariant_id = $4`,
+		p.DeleteBy,
+		p.DeleteDt,
+		p.PhotoID,
+		p.ItemvariantID,
+	)
+	return err
+}
