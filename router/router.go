@@ -36,7 +36,7 @@ func Init() *echo.Echo {
 	web.GET("/me", userController.Me, checkToken)
 
 	webItem := web.Group("/item")
-	webItem.POST("/page", itemController.Page)
+	webItem.POST("/page", itemController.Page, checkToken)
 	webItem.GET("/:item_id", itemController.GetById)
 	webItem.POST("", itemController.Create, checkToken)
 	webItem.PUT("/:item_id", itemController.Update, checkToken)
@@ -46,6 +46,8 @@ func Init() *echo.Echo {
 	webItemvariant.POST("/page", itemvariantController.Page)
 	webItemvariant.GET("/:itemvariant_id", itemvariantController.GetById)
 	webItemvariant.POST("", itemvariantController.Create, checkToken)
+	webItemvariant.PUT("/:itemvariant_id", itemvariantController.Update, checkToken)
+	webItemvariant.DELETE("/:itemvariant_id", itemvariantController.Delete, checkToken)
 
 	return web
 }

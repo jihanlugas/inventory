@@ -18,8 +18,8 @@ var dbCmd = &cobra.Command{
 
 var dbCreateCmd = &cobra.Command{
 	Use:   "create",
-	Short: "Create database table",
-	Long:  `Create database table`,
+	Short: "Create",
+	Long:  `Create`,
 	Run: func(cmd *cobra.Command, args []string) {
 		create()
 	},
@@ -27,8 +27,8 @@ var dbCreateCmd = &cobra.Command{
 
 var dbDropCmd = &cobra.Command{
 	Use:   "drop",
-	Short: "Drop database table",
-	Long:  `Drop database table`,
+	Short: "Drop",
+	Long:  `Drop`,
 	Run: func(cmd *cobra.Command, args []string) {
 		drop()
 	},

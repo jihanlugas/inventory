@@ -38,6 +38,15 @@ type createItemvariantReq struct {
 	PhotoChk               bool                  `json:"photo" validate:"required,photo=Photo"`
 }
 
+type updateItemvariantReq struct {
+	ItemvariantName        string                `json:"itemvariantName" form:"itemvariantName" validate:"required,lte=200"`
+	ItemvariantDescription string                `json:"itemvariantDescription" form:"itemvariantDescription" validate:"lte=500"`
+	Price                  int64                 `json:"price" form:"price" validate:"required"`
+	IsActive               bool                  `json:"isActive" form:"isActive" validate:"required"`
+	Photo                  *multipart.FileHeader `json:"-"`
+	PhotoChk               bool                  `json:"photo" validate:"photo=Photo"`
+}
+
 type itemvariantRes struct {
 	ItemvariantID          int64      `json:"itemvariantId"`
 	ItemID                 int64      `json:"itemId"`
@@ -151,7 +160,7 @@ func (h Itemvariant) Create(c echo.Context) error {
 // @Tags Itemvariant
 // @Accept json
 // @Produce json
-// @Param kanji path number true "itemvariant_id" default(0)
+// @Param itemvariant_id path number true "itemvariant_id"
 // @Success      200  {object}	response.Response{payload=itemvariantRes}
 // @Failure      500  {object}  response.Response
 // @Router /itemvariant/{itemvariant_id} [get]
@@ -279,4 +288,169 @@ func getPageItemvariant(req *pageItemvariantReq) (error, int, []itemvariantRes) 
 	}
 
 	return err, cnt, listRes
+}
+
+// Update Update Itemvariant
+// @Summary Update Itemvariant
+// @Tags Itemvariant
+// @Accept json
+// @Produce json
+// @Param itemvariant_id path number true "itemvariant_id"
+// @Param itemvariantName formData string true "Itemvariant Name"
+// @Param itemvariantDescription formData string true "Itemvariant Description"
+// @Param price formData integer true "Price"
+// @Param isActive formData boolean true "Active"
+// @Param photo formData file true "Photo"
+// @Success      200  {object}	response.Response{payload=itemvariantRes}
+// @Failure      500  {object}  response.Response
+// @Router /itemvariant/{itemvariant_id} [put]
+func (h Itemvariant) Update(c echo.Context) error {
+	var err error
+	var data model.PublicItemvariant
+	var publicphoto model.PublicPhoto
+
+	loginUser, err := getUserLoginInfo(c)
+	if err != nil {
+		errorInternal(c, err)
+	}
+
+	ID, err := strconv.ParseInt(c.Param("itemvariant_id"), 10, 64)
+	if err != nil {
+		return response.StatusNotFound("data not found", response.Payload{}).SendJSON(c)
+	}
+
+	req := new(updateItemvariantReq)
+	if err = c.Bind(req); err != nil {
+		return err
+	}
+
+	req.Photo, err = c.FormFile("photo")
+	if err != nil && !errors.Is(err, http.ErrMissingFile) {
+		errorInternal(c, err)
+	}
+	req.PhotoChk = req.Photo != nil
+
+	if err = c.Validate(req); err != nil {
+		return response.StatusBadRequest("validation failed", response.ValidationError(err)).SendJSON(c)
+	}
+
+	conn, ctx, closeConn := db.GetConnection()
+	defer closeConn()
+
+	data.ItemvariantID = ID
+	err = data.GetById(ctx, conn)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return response.StatusNotFound("data not found", response.Payload{}).SendJSON(c)
+		}
+		errorInternal(c, err)
+	}
+
+	tx, err := conn.Begin(ctx)
+	if err != nil {
+		errorInternal(c, err)
+	}
+	defer db.DeferHandleTransaction(ctx, tx)
+
+	// proccess photo
+	if req.Photo != nil {
+		if data.PhotoID != 0 {
+			publicphoto.PhotoID = data.PhotoID
+			err = publicphoto.Delete(conn, ctx, tx)
+			if err != nil {
+				errorInternal(c, err)
+			}
+		}
+		publicphoto.CreateBy = loginUser.UserID
+		err = publicphoto.Upload(conn, ctx, tx, req.Photo, constant.PhotoRefTableItemvariant)
+		if err != nil {
+			errorInternal(c, err)
+		}
+		data.PhotoID = publicphoto.PhotoID
+	}
+
+	data.ItemvariantName = req.ItemvariantName
+	data.ItemvariantDescription = req.ItemvariantDescription
+	data.Price = req.Price
+	data.IsActive = req.IsActive
+	data.UpdateBy = loginUser.UserID
+	err = data.Update(ctx, tx)
+	if err != nil {
+		errorInternal(c, err)
+	}
+
+	if err = tx.Commit(ctx); err != nil {
+		_ = tx.Rollback(ctx)
+		errorInternal(c, err)
+	}
+
+	res := itemvariantRes{
+		ItemvariantID:          data.ItemvariantID,
+		ItemID:                 data.ItemID,
+		ItemvariantName:        data.ItemvariantName,
+		ItemvariantDescription: data.ItemvariantDescription,
+		PhotoUrl:               getPhotoUrl(ctx, conn, data.PhotoID),
+		Price:                  data.Price,
+		IsActive:               data.IsActive,
+		CreateBy:               data.CreateBy,
+		CreateDt:               data.CreateDt,
+		UpdateBy:               data.UpdateBy,
+		UpdateDt:               data.UpdateDt,
+	}
+
+	return response.StatusAccepted("success", res).SendJSON(c)
+}
+
+// Delete Itemvariant
+// @Summary Delete Itemvariant
+// @Tags Itemvariant
+// @Accept json
+// @Produce json
+// @Param itemvariant_id path number true "itemvariant_id"
+// @Success      200  {object}	response.Response
+// @Failure      500  {object}  response.Response
+// @Router /itemvariant/{itemvariant_id} [delete]
+func (h Itemvariant) Delete(c echo.Context) error {
+	var err error
+	var data model.PublicItemvariant
+
+	loginUser, err := getUserLoginInfo(c)
+	if err != nil {
+		errorInternal(c, err)
+	}
+
+	ID, err := strconv.ParseInt(c.Param("itemvariant_id"), 10, 64)
+	if err != nil {
+		return response.StatusNotFound("data not found", response.Payload{}).SendJSON(c)
+	}
+
+	conn, ctx, closeConn := db.GetConnection()
+	defer closeConn()
+
+	data.ItemvariantID = ID
+	err = data.GetById(ctx, conn)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return response.StatusNotFound("data not found", response.Payload{}).SendJSON(c)
+		}
+		errorInternal(c, err)
+	}
+
+	tx, err := conn.Begin(ctx)
+	if err != nil {
+		errorInternal(c, err)
+	}
+	defer db.DeferHandleTransaction(ctx, tx)
+
+	err = data.Delete(conn, ctx, tx, loginUser.UserID)
+	if err != nil {
+		errorInternal(c, err)
+	}
+
+	if err = tx.Commit(ctx); err != nil {
+		_ = tx.Rollback(ctx)
+		errorInternal(c, err)
+	}
+
+	return response.StatusOk("success", response.Payload{}).SendJSON(c)
 }

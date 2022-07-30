@@ -68,6 +68,11 @@ type itemRes struct {
 func (h Item) Page(c echo.Context) error {
 	var err error
 
+	loginUser, err := getUserLoginInfo(c)
+	if err != nil {
+		errorInternal(c, err)
+	}
+
 	req := new(pageItemReq)
 	if err = c.Bind(req); err != nil {
 		errorInternal(c, err)
@@ -77,7 +82,7 @@ func (h Item) Page(c echo.Context) error {
 		return response.StatusBadRequest("validation error", response.ValidationError(err)).SendJSON(c)
 	}
 
-	err, cnt, list := getPageItem(req)
+	err, cnt, list := getPageItem(req, loginUser)
 	if err != nil {
 		errorInternal(c, err)
 	}
@@ -181,7 +186,7 @@ func (h Item) Create(c echo.Context) error {
 // @Tags Item
 // @Accept json
 // @Produce json
-// @Param kanji path number true "item_id" default(0)
+// @Param item_id path number true "item_id"
 // @Success      200  {object}	response.Response{payload=itemRes}
 // @Failure      500  {object}  response.Response
 // @Router /item/{item_id} [get]
@@ -221,13 +226,14 @@ func (h Item) GetById(c echo.Context) error {
 	return response.StatusOk("success", res).SendJSON(c)
 }
 
-func getPageItem(req *pageItemReq) (error, int, []itemRes) {
+func getPageItem(req *pageItemReq, loginUser UserLogin) (error, int, []itemRes) {
 	var err error
 	var cnt int
 	var list []model.PublicItem
 	var listRes []itemRes
 
 	q := model.GetItemQuery().Where().
+		Int64("item.property_id", "=", loginUser.PropertyID).
 		StringLike("item.item_name", req.ItemName).
 		StringLike("item.item_description", req.ItemDescription).
 		IsNull("item.delete_dt")
@@ -284,7 +290,7 @@ func getPageItem(req *pageItemReq) (error, int, []itemRes) {
 // @Tags Item
 // @Accept json
 // @Produce json
-// @Param kanji path number true "item_id" default(0)
+// @Param item_id path number true "item_id"
 // @Param itemName formData string true "Item Name"
 // @Param itemDescription formData string true "Item Description"
 // @Param isActive formData boolean true "Active"
@@ -392,7 +398,7 @@ func (h Item) Update(c echo.Context) error {
 // @Tags Item
 // @Accept json
 // @Produce json
-// @Param kanji path number true "item_id" default(0)
+// @Param item_id path number true "item_id"
 // @Success      200  {object}	response.Response
 // @Failure      500  {object}  response.Response
 // @Router /item/{item_id} [delete]
